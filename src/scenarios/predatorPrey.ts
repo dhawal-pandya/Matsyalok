@@ -21,9 +21,9 @@ export function populatePredatorPrey(
   w: World,
   opts: PredatorPreyOpts = {},
 ): void {
-  const prey = opts.prey ?? 400;
-  const hunters = opts.hunters ?? 4;
-  const whales = opts.whales ?? 1;
+  const prey = opts.prey ?? 1000;
+  const hunters = opts.hunters ?? 8;
+  const whales = opts.whales ?? 0;
 
   for (let i = 0; i < prey; i++) {
     w.spawn({
