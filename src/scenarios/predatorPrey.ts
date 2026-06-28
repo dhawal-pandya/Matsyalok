@@ -22,7 +22,7 @@ export function populatePredatorPrey(
   opts: PredatorPreyOpts = {},
 ): void {
   const prey = opts.prey ?? 1000;
-  const hunters = opts.hunters ?? 8;
+  const hunters = opts.hunters ?? 6;
   const whales = opts.whales ?? 0;
 
   for (let i = 0; i < prey; i++) {

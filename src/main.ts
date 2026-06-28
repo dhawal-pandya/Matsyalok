@@ -1,10 +1,13 @@
-import "uplot/dist/uPlot.min.css";
 import { World } from "./sim/world";
 import { Grid } from "./sim/grid";
 import { ResourceField } from "./sim/resource";
 import { step } from "./sim/step";
 import { clamp } from "./sim/math";
-import { populatePredatorPrey, SP_HUNTER, SP_WHALE } from "./scenarios/predatorPrey";
+import {
+  populatePredatorPrey,
+  SP_HUNTER,
+  SP_WHALE,
+} from "./scenarios/predatorPrey";
 import { Renderer } from "./render/canvas";
 import { Camera } from "./render/camera";
 import { PlayerController } from "./input/controller";
@@ -42,7 +45,15 @@ let resource: ResourceField;
 let seed = 7;
 
 const recorder = new DataRecorder([
-  "t", "prey", "hunter", "whale", "resource", "preyEnergy", "hunterEnergy", "killsPerSec", "birthsPerSec",
+  "t",
+  "prey",
+  "hunter",
+  "whale",
+  "resource",
+  "preyEnergy",
+  "hunterEnergy",
+  "killsPerSec",
+  "birthsPerSec",
 ]);
 let charts: Charts;
 let tabs: Tabs;
@@ -79,10 +90,15 @@ function sample(): void {
       preyE += world.energy[i];
     }
   }
-  const resPct = (resource.totalBiomass() / (resource.amount.length * resource.max)) * 100;
+  const resPct =
+    (resource.totalBiomass() / (resource.amount.length * resource.max)) * 100;
   const span = world.time - lastSampleT || 1;
   recorder.push([
-    world.time, prey, hunter, whale, resPct,
+    world.time,
+    prey,
+    hunter,
+    whale,
+    resPct,
     prey ? preyE / prey : 0,
     hunter ? hunterE / hunter : 0,
     (world.kills - lastKills) / span,
@@ -117,7 +133,10 @@ function initUI(): void {
   buildToggles(controlsEl, settings, () => world && applySettings());
   buildControls(controlsEl, resource);
 
-  charts = new Charts(document.getElementById("charts") as HTMLElement, chartWidth());
+  charts = new Charts(
+    document.getElementById("charts") as HTMLElement,
+    chartWidth(),
+  );
   tabs = new Tabs(
     document.getElementById("tabs") as HTMLElement,
     document.getElementById("data") as HTMLElement,
@@ -130,7 +149,9 @@ function initUI(): void {
   );
 
   const exportBtn = document.getElementById("export") as HTMLElement;
-  exportBtn.addEventListener("click", () => downloadCSV(`matsyalok-${Date.now()}.csv`, recorder.toCSV()));
+  exportBtn.addEventListener("click", () =>
+    downloadCSV(`matsyalok-${Date.now()}.csv`, recorder.toCSV()),
+  );
 
   const respawnBtn = document.createElement("button");
   respawnBtn.id = "respawn";
@@ -141,8 +162,9 @@ function initUI(): void {
   // Welcome / help overlay (shown on load, reopened by the ? button; click to close).
   const overlay = document.getElementById("overlay") as HTMLElement;
   overlay.addEventListener("click", () => overlay.classList.add("hidden"));
-  (document.getElementById("help-btn") as HTMLElement).addEventListener("click", () =>
-    overlay.classList.remove("hidden"),
+  (document.getElementById("help-btn") as HTMLElement).addEventListener(
+    "click",
+    () => overlay.classList.remove("hidden"),
   );
 
   // Pause with P.
@@ -181,8 +203,13 @@ function updateHud(): void {
     else if (s === SP_WHALE) whale++;
     else prey++;
   }
-  const res = Math.round((resource.totalBiomass() / (resource.amount.length * resource.max)) * 100);
-  hud.innerHTML = `${modeName()} · ${prey} prey · ${hunter} hunters · ${whale} whales · ${res}% · ${fps} fps`;
+  const res = Math.round(
+    (resource.totalBiomass() / (resource.amount.length * resource.max)) * 100,
+  );
+  hud.innerHTML =
+    `${modeName()} · ${prey} prey · ${hunter} hunters` +
+    (whale > 0 ? ` · ${whale} whales` : "") +
+    ` · ${res}% · ${fps} fps`;
 }
 
 function updateCamera(): void {
@@ -251,7 +278,13 @@ function frame(now: number): void {
 }
 
 renderer.resize(window.innerWidth, window.innerHeight);
-resource = new ResourceField(window.innerWidth, window.innerHeight, RES_CELL, RES_MAX, RES_REGROW);
+resource = new ResourceField(
+  window.innerWidth,
+  window.innerHeight,
+  RES_CELL,
+  RES_MAX,
+  RES_REGROW,
+);
 initUI();
 respawn();
 window.addEventListener("resize", onResize);
