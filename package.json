@@ -1,0 +1,22 @@
+{
+  "name": "matsyalok",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "The realm of fish — a steering-behaviour sandbox of emergent collective behaviour.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "deploy": "./scripts/deploy-gh-pages.sh",
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7"
+  },
+  "dependencies": {
+    "uplot": "^1.6.32"
+  }
+}

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Deploy to gh-pages whenever main is pushed. Git feeds the refs being pushed on
+# stdin as: <local ref> <local sha> <remote ref> <remote sha>.
+# The deploy's own push of gh-pages re-fires this hook but is skipped (not main),
+# so there is no recursion.
+set -euo pipefail
+
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+  if [ "$remote_ref" = "refs/heads/main" ]; then
+    echo "→ push to main detected — deploying to gh-pages…"
+    "$(git rev-parse --show-toplevel)/scripts/deploy-gh-pages.sh"
+  fi
+done
+
+exit 0

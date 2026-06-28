@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#0a141f" />
+    <title>Matsyalok — the realm of fish</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #06101a;
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      }
+      #app {
+        position: fixed;
+        inset: 0;
+      }
+      #scene {
+        display: block;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+      }
+      #hud {
+        position: fixed;
+        top: 10px;
+        left: 12px;
+        padding: 6px 10px;
+        font-size: 11px;
+        line-height: 1.5;
+        letter-spacing: 0.02em;
+        color: rgba(220, 235, 250, 0.72);
+        background: rgba(8, 18, 28, 0.42);
+        border: 1px solid rgba(120, 170, 210, 0.14);
+        border-radius: 6px;
+        backdrop-filter: blur(3px);
+        pointer-events: none;
+        user-select: none;
+      }
+      #hud b {
+        color: rgba(150, 215, 255, 0.95);
+        font-weight: 600;
+      }
+
+      #tabs {
+        position: fixed;
+        top: 10px;
+        right: 12px;
+        display: flex;
+        gap: 4px;
+        z-index: 5;
+      }
+      .ctl-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font: 12px ui-monospace, monospace;
+        color: rgba(202, 224, 244, 0.9);
+        cursor: pointer;
+        margin-bottom: 8px;
+      }
+      .ctl-toggle input {
+        accent-color: #5fd0e6;
+        width: 15px;
+        height: 15px;
+      }
+      #respawn {
+        margin-top: 22px;
+        margin-left: 8px;
+        font: 600 12px ui-monospace, monospace;
+        color: #cfe9ff;
+        background: rgba(150, 215, 255, 0.22);
+        border: 1px solid rgba(120, 170, 210, 0.3);
+        border-radius: 6px;
+        padding: 8px 16px;
+        cursor: pointer;
+      }
+      #help-btn {
+        position: fixed;
+        right: 14px;
+        bottom: 14px;
+        z-index: 5;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        font: 700 16px ui-monospace, monospace;
+        color: rgba(200, 225, 245, 0.85);
+        background: rgba(8, 18, 28, 0.6);
+        border: 1px solid rgba(120, 170, 210, 0.25);
+        cursor: pointer;
+        backdrop-filter: blur(3px);
+      }
+      #help-btn:hover {
+        color: #9bd7ff;
+        border-color: rgba(150, 215, 255, 0.5);
+      }
+      #overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(4, 10, 16, 0.50);
+        backdrop-filter: blur(5px);
+        cursor: pointer;
+        padding: 24px;
+      }
+      #overlay.hidden {
+        display: none;
+      }
+      #overlay .card {
+        max-width: 540px;
+        color: rgba(214, 232, 248, 0.92);
+        font: 13px/1.65 ui-monospace, monospace;
+      }
+      #overlay .card h1 {
+        font: 700 26px ui-monospace, monospace;
+        color: #9bd7ff;
+        margin-bottom: 2px;
+        letter-spacing: 0.02em;
+      }
+      #overlay .card .sub {
+        color: rgba(160, 200, 230, 0.7);
+        margin-bottom: 18px;
+      }
+      #overlay .card p {
+        margin-bottom: 12px;
+      }
+      #overlay .card b {
+        color: #bfe3ff;
+        font-weight: 600;
+      }
+      #overlay .card .go {
+        margin-top: 18px;
+        color: rgba(150, 215, 255, 0.7);
+        font-size: 12px;
+      }
+      .tab {
+        font: 600 11px ui-monospace, monospace;
+        letter-spacing: 0.04em;
+        color: rgba(200, 225, 245, 0.7);
+        background: rgba(8, 18, 28, 0.55);
+        border: 1px solid rgba(120, 170, 210, 0.18);
+        border-radius: 6px;
+        padding: 5px 12px;
+        cursor: pointer;
+        backdrop-filter: blur(3px);
+      }
+      .tab.active {
+        color: #0a1622;
+        background: rgba(150, 215, 255, 0.92);
+        border-color: transparent;
+      }
+      #data {
+        position: fixed;
+        inset: 0;
+        z-index: 4;
+        overflow: auto;
+        background: rgba(6, 14, 22, 0.94);
+        backdrop-filter: blur(4px);
+        padding: 56px 20px 40px;
+      }
+      #data.hidden {
+        display: none;
+      }
+      .data-inner {
+        max-width: 760px;
+        margin: 0 auto;
+        color: rgba(210, 230, 248, 0.9);
+      }
+      .data-inner h2 {
+        font: 600 15px ui-monospace, monospace;
+        margin-bottom: 14px;
+        color: #9bd7ff;
+      }
+      .data-inner h3 {
+        font: 600 11px ui-monospace, monospace;
+        margin: 24px 0 10px;
+        color: rgba(180, 210, 235, 0.8);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      #charts {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+      .ctl {
+        display: block;
+        margin-bottom: 12px;
+      }
+      .ctl-head {
+        display: flex;
+        justify-content: space-between;
+        font: 11px ui-monospace, monospace;
+        color: rgba(190, 215, 238, 0.85);
+        margin-bottom: 4px;
+      }
+      .ctl-val {
+        color: #9bd7ff;
+      }
+      .ctl input[type="range"] {
+        width: 100%;
+        accent-color: #5fd0e6;
+      }
+      #export {
+        margin-top: 22px;
+        font: 600 12px ui-monospace, monospace;
+        color: #0a1622;
+        background: #9bd7ff;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 16px;
+        cursor: pointer;
+      }
+      .u-title {
+        color: rgba(190, 215, 238, 0.85);
+        font: 600 12px ui-monospace, monospace !important;
+      }
+      .u-legend,
+      .u-legend * {
+        color: rgba(190, 215, 238, 0.8) !important;
+        font: 11px ui-monospace, monospace !important;
+      }
+      .uplot {
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="scene"></canvas>
+      <div id="hud"></div>
+      <div id="tabs"></div>
+      <div id="data" class="hidden">
+        <div class="data-inner">
+          <h2>Matsyalok — ecosystem data</h2>
+          <div id="charts"></div>
+          <h3>Modes &amp; live tuning</h3>
+          <div id="controls"></div>
+          <button id="export">Export CSV ⤓</button>
+        </div>
+      </div>
+      <button id="help-btn" title="About Matsyalok">?</button>
+      <div id="overlay">
+        <div class="card">
+          <h1>Matsyalok</h1>
+          <div class="sub">मत्स्यलोक · the realm of fish</div>
+          <p>
+            A living shoal and the bigger fish that hunt it. Nothing is scripted — each
+            creature only <b>schools</b>, <b>flees</b>, and <b>chases</b> by size, and the
+            collective behaviour <b>emerges</b>: bait-balls, ambushes, booms and crashes.
+          </p>
+          <p>
+            In the <b>Data</b> tab, turn off <b>Biting</b> and <b>Hunger</b> and the hunters
+            stop eating — they just push the shoal around. Same engine, a herding game.
+          </p>
+          <p>
+            <b>Click</b> any fish to possess it · <b>WASD</b> / mouse to swim ·
+            <b>Space</b> to dart or lunge · <b>C</b> control scheme · <b>F</b> follow ·
+            <b>P</b> pause · <b>Esc</b> release.
+          </p>
+          <p>
+            <b>Data</b> tab: live population &amp; resource charts, tuning sliders, mode
+            toggles, and CSV export.
+          </p>
+          <div class="go">click anywhere to dive in</div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
