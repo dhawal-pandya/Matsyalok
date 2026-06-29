@@ -46,8 +46,8 @@ export class Renderer {
     const { ctx, viewW, viewH } = this;
 
     const g = ctx.createLinearGradient(0, 0, viewW, viewH);
-    g.addColorStop(0, "#0c1c2c");
-    g.addColorStop(1, "#08131f");
+    g.addColorStop(0, "#0a2148"); // deep ocean blue
+    g.addColorStop(1, "#040c20");
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, viewW, viewH);
 
@@ -77,14 +77,15 @@ export class Renderer {
     }
     const img = this.resImage!;
     const data = img.data;
-    // Desaturated grey-green; per-pixel alpha encodes how full each cell is.
+    // Reddish krill bloom — over the deep blue water it composites to soft purples
+    // where dense; per-pixel alpha encodes how full each cell is.
     for (let c = 0; c < cols * rows; c++) {
       const a = amount[c] / max;
       const o = c * 4;
-      data[o] = 108;
-      data[o + 1] = 124;
-      data[o + 2] = 116;
-      data[o + 3] = (a * a * 50) | 0; // muted toward grey, biased to the richest cells
+      data[o] = 190; // R — krill red
+      data[o + 1] = 78;
+      data[o + 2] = 120; // B nudged up so the tint leans magenta, not pure red
+      data[o + 3] = (a * a * 34) | 0; // faint — a soft purple haze, not a red wash
     }
     this.resBufCtx.putImageData(img, 0, 0);
 

@@ -67,16 +67,18 @@ rest (emergent Lotka–Volterra, verified to oscillate without collapse).
 
 | Control | Location | Notes |
 | --- | --- | --- |
-| Master dial | [../src/main.ts](../src/main.ts) — `RES_REGROW`, `RES_MAX` | resource regrowth = ecosystem carrying capacity (D9) |
-| Breeding / predation | [../src/sim/lifecycle.ts](../src/sim/lifecycle.ts) — `Ecology.*` | metabolic cost, energy per kill, repro + digestion cooldowns |
-| r/K strategy, seed counts | [../src/scenarios/predatorPrey.ts](../src/scenarios/predatorPrey.ts) — `reproThreshold`, `energy`, `prey`/`hunters` | prey breed cheap & fast, hunters dear & slow |
+| Master dial + everything per-species | [../src/config/reef.json](../src/config/reef.json) — `resource.regrow`/`max`, and each species' `reproThreshold`/`energy`/`basalMult`/`count` | resource regrowth = carrying capacity (D9); the single dial for the reef (D19) |
+| Breeding / predation | [../src/sim/lifecycle.ts](../src/sim/lifecycle.ts) — `Ecology.*` | metabolic cost, energy per kill, repro + digestion cooldowns, graze rate/reach |
 | Who-eats-whom | [../src/sim/relate.ts](../src/sim/relate.ts) — `EAT_RATIO` | the size threshold defining the food web |
-| Hard cap | [../src/main.ts](../src/main.ts) — `CAPACITY = 8192` | SoA size; nothing spawns past it |
+| Hard cap | [../src/main.ts](../src/main.ts) — `CAPACITY = 16384` | SoA size; nothing spawns past it |
 
-The balance that works today: prey are r-strategists (low `reproThreshold`, fast
-grazing) and hunters are K-strategists (high threshold, **digestion-limited
-predation**) over a generous resource — so prey out-breed predation and the web
-oscillates instead of collapsing. All of this becomes live sliders in Phase 6.
+The balance that works today is a three-tier chain (bloom → **sardine** →
+**mackerel** → **grouper**): sardines are r-strategists (low `reproThreshold`, fast
+grazing); mackerel breed slower and are digestion-limited; the grouper is a
+near-immortal sit-and-wait ambusher (tiny `basalMult`) that breeds rarely, so a
+handful persist and hold the mackerel down rather than booming. Over a generous
+resource the three oscillate gently instead of collapsing — verified headlessly by
+stepping the sim and printing per-species counts (see USAGE.md → *Verifying*).
 
 ---
 

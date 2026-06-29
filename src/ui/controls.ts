@@ -63,13 +63,13 @@ export function buildToggles(
   apply: () => void,
 ): void {
   container.appendChild(
-    toggle("Biting — hunters catch prey", () => settings.biting, (v) => {
+    toggle("Biting · fish catch & eat each other", () => settings.biting, (v) => {
       settings.biting = v;
       apply();
     }),
   );
   container.appendChild(
-    toggle("Hunger — energy, breeding & starvation", () => settings.hunger, (v) => {
+    toggle("Hunger · energy, breeding & starvation", () => settings.hunger, (v) => {
       settings.hunger = v;
       apply();
     }),
@@ -78,11 +78,39 @@ export function buildToggles(
 
 export function buildControls(container: HTMLElement, resource: ResourceField): void {
   const knobs: Knob[] = [
-    { label: "resource regrow (master dial · D9)", min: 0, max: 12, step: 0.1, get: () => resource.regrowRate, set: (v) => (resource.regrowRate = v) },
+    { label: "krill regrow (master dial)", min: 0, max: 14, step: 0.1, get: () => resource.regrowRate, set: (v) => (resource.regrowRate = v) },
     { label: "graze rate", min: 0, max: 14, step: 0.5, get: () => Ecology.GRAZE_RATE, set: (v) => (Ecology.GRAZE_RATE = v) },
-    { label: "meat per kill", min: 0, max: 14, step: 0.5, get: () => Ecology.MEAT, set: (v) => (Ecology.MEAT = v) },
-    { label: "predator digestion (s)", min: 0.5, max: 8, step: 0.1, get: () => Ecology.FEED_COOLDOWN, set: (v) => (Ecology.FEED_COOLDOWN = v) },
+    { label: "energy per catch", min: 0, max: 14, step: 0.5, get: () => Ecology.MEAT, set: (v) => (Ecology.MEAT = v) },
+    { label: "digestion (s)", min: 0.5, max: 8, step: 0.1, get: () => Ecology.FEED_COOLDOWN, set: (v) => (Ecology.FEED_COOLDOWN = v) },
     { label: "reproduction cooldown (s)", min: 0.5, max: 10, step: 0.1, get: () => Ecology.REPRO_COOLDOWN, set: (v) => (Ecology.REPRO_COOLDOWN = v) },
   ];
   for (const k of knobs) container.appendChild(slider(k));
+}
+
+// Sensible upper bounds for the per-fish "how many" sliders (a few × the default).
+const COUNT_MAX: Record<string, number> = { sardine: 4000, mackerel: 150, grouper: 16 };
+const COUNT_STEP: Record<string, number> = { sardine: 50, mackerel: 5, grouper: 1 };
+
+/** Per-fish starting-count sliders. These take effect on the next Respawn (counts
+ *  are a spawn-time choice), writing into the shared `counts` object. */
+export function buildCounts(
+  container: HTMLElement,
+  counts: Record<string, number>,
+  species: { id: string; count: number }[],
+): void {
+  const head = document.createElement("h3");
+  head.textContent = "How many of each (respawn to apply)";
+  container.appendChild(head);
+  for (const s of species) {
+    container.appendChild(
+      slider({
+        label: s.id,
+        min: 0,
+        max: COUNT_MAX[s.id] ?? s.count * 3,
+        step: COUNT_STEP[s.id] ?? 1,
+        get: () => counts[s.id] ?? s.count,
+        set: (v) => (counts[s.id] = v),
+      }),
+    );
+  }
 }

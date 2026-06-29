@@ -136,6 +136,31 @@ _Later phases append here as they ship._
 
 ---
 
+## The current reef
+
+The live world is a **three-fish reef**, spawned from
+[`../src/config/reef.json`](../src/config/reef.json) and presented as *just
+different fish* — no "predator"/"prey" labels; who-eats-whom is emergent from size
+(D6/D17). Edit that one JSON to tune any species or the resource field.
+
+- **sardine** — tiny, **silvery-white**, schools and grazes the bloom; breeds fast.
+- **mackerel** — small, **green**, fast; schools and works the sardine shoal it
+  outsizes (roaming pack / strategy brain).
+- **grouper** — the **brown** giant; a **sit-and-wait ambusher** (D18). It spawns in
+  the corners so it doesn't carve up the shoal, lurks almost cost-free, stalks any
+  mackerel it senses, and **runs it down with a long dart**, prowling to new water
+  when hungry. It's the only thing holding the mackerel in check.
+
+**Hunger gauge:** every fish's tail and eyes read **red when starving** (about to
+die) and shift to **green as it nears its reproductive split** — population health
+at a glance, no Data tab needed.
+
+**On phones / small screens** the reef is spawned **thinner** (counts scale to
+~0.35×) so it stays legible and smooth where the world is a fraction of a desktop's
+area.
+
+---
+
 ## Controls
 
 | Input | Action | Available |
@@ -165,10 +190,10 @@ Data tab (A6); the rest are named constants in the files below.
 | `sim/step.ts` | `W_BOUNDS` | strength of wall avoidance |
 | `sim/relate.ts` | `EAT_RATIO` | the size threshold that defines who eats whom |
 | `sim/lifecycle.ts` | `Ecology.*` (basal/move cost, graze, meat, repro/feed cooldowns) | metabolism, predation rate, breeding speed |
-| `sim/abilities.ts` | `DEFS` (dart/lunge: speed/force mult, duration, cooldown, cost) | burst strength and frequency |
-| `sim/brains/strategy.ts` | `W_SPREAD`, `W_PURSUE`, `LUNGE_RANGE` | how hunters encircle and commit |
-| `sim/resource.ts` / `main.ts` | `RES_REGROW`, `RES_MAX` | **master balance dial (D9)** — ecosystem carrying capacity |
-| `scenarios/predatorPrey.ts` | senses, sizes, speeds, counts, `energy`, `reproThreshold` | per-species physique, r/K strategy, population mix |
+| `sim/abilities.ts` | `DEFS` (dart/lunge/leap: speed/force mult, duration, cooldown, cost) | burst strength and reach |
+| `sim/brains/strategy.ts` | `W_SPREAD`, `W_PURSUE`, `W_AVOID`, `LUNGE_RANGE` | how mackerel spread, commit, and keep off the grouper |
+| `sim/brains/ambush.ts` | `STRIKE_RANGE`, `W_STALK`, `HUNGRY_FRAC`, `BIG_GAME` | how the grouper stalks, when it darts, when it prowls, what it bothers to chase |
+| **`config/reef.json`** | per-species size/senses/speed/`energy`/`reproThreshold`/colour/**count**, plus the resource field (`regrow`, `max`) | **the single dial for the whole reef (D19)** — incl. the master balance dial (D9) |
 
 The **resource-field regrowth rate** (Phase 3) becomes the master balance dial
 for the whole ecosystem (D9).

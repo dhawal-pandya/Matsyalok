@@ -23,6 +23,11 @@ export const SP_GROUPER = 2;
 /** Resource-field setup (cell size, per-cell max, regrow) — read by main.ts. */
 export const reefResource = reef.resource;
 
+/** Each fish's id and default starting count — drives the in-app count controls. */
+export const reefDefaults: { id: string; count: number }[] = reef.species.map(
+  (s) => ({ id: s.id, count: s.count }),
+);
+
 const STYLE: Record<string, number> = {
   muted: FishStyle.MUTED,
   vivid: FishStyle.VIVID,
@@ -58,7 +63,7 @@ export function populateReef(w: World, opts: ReefOpts = {}): void {
   const scale = opts.scale ?? 1;
   reef.species.forEach((s, species) => {
     const base = opts.counts?.[s.id] ?? s.count;
-    const count = Math.max(1, Math.round(base * scale));
+    const count = Math.round(base * scale); // 0 means none — respect the slider
     const m = Math.min(200, 40 + species * 80);
     const corners = (s as { spawnAt?: string }).spawnAt === "corners";
     for (let i = 0; i < count; i++) {

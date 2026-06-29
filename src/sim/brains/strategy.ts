@@ -12,7 +12,7 @@ import { wander } from "../steering";
 
 const W_SPREAD = 1.6; // push off fellow schoolers → spread around the shoal
 const W_PURSUE = 1.9;
-const W_AVOID = 2.2; // veer away from the giant
+const W_AVOID = 1.4; // veer away from the giant (gently — they still drift near it)
 const W_WANDER = 0.6;
 const LUNGE_RANGE = 9; // × own size: commit a lunge as the shoal bolts
 

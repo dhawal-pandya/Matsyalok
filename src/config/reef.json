@@ -1,5 +1,5 @@
 {
-  "_comment": "The reef, in data. Edit these to tune the world — reef.ts spawns straight from here and the headless balance harness reads the same file. Ranges are [min, max] (rolled per fish); scalars are fixed. style/brain/ability are names mapped in reef.ts. Species order defines the SP_* ids, so keep it stable.",
+  "_comment": "The reef, in data. Edit these to tune the world; reef.ts spawns straight from here and the headless balance harness reads the same file. Ranges are [min, max] (rolled per fish); scalars are fixed. style/brain/ability are names mapped in reef.ts. Species order defines the SP_* ids, so keep it stable.",
   "resource": {
     "cell": 32,
     "max": 26,
@@ -50,10 +50,10 @@
       "id": "grouper",
       "count": 2,
       "spawnAt": "corners",
-      "size": [14, 18],
+      "size": [12, 15],
       "maxSpeed": [44, 54],
       "maxForce": 120,
-      "vision": 210,
+      "vision": 300,
       "fov": 250,
       "lateral": 64,
       "hue": 28,

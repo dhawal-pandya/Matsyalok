@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#0a141f" />
-    <title>Matsyalok — the realm of fish</title>
+    <title>Matsyalok · the realm of fish</title>
     <style>
       :root {
         color-scheme: dark;
@@ -147,6 +147,20 @@
         color: rgba(150, 215, 255, 0.7);
         font-size: 12px;
       }
+      #overlay .card .credit {
+        margin-top: 22px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(120, 170, 210, 0.16);
+        font-size: 11px;
+        color: rgba(170, 200, 225, 0.6);
+      }
+      #overlay .card .credit a {
+        color: #9bd7ff;
+        text-decoration: none;
+      }
+      #overlay .card .credit a:hover {
+        text-decoration: underline;
+      }
       .tab {
         font: 600 11px ui-monospace, monospace;
         letter-spacing: 0.04em;
@@ -225,6 +239,22 @@
         padding: 8px 16px;
         cursor: pointer;
       }
+      .tune-warn {
+        margin-bottom: 14px;
+        padding: 9px 12px;
+        font: 11px/1.55 ui-monospace, monospace;
+        color: #ffb4b4;
+        background: rgba(190, 60, 60, 0.12);
+        border: 1px solid rgba(230, 90, 90, 0.5);
+        border-radius: 6px;
+      }
+      .tune-warn b {
+        color: #ff9a9a;
+        font-weight: 700;
+      }
+      .tune-warn code {
+        color: #ffd9d9;
+      }
       .u-title {
         color: rgba(190, 215, 238, 0.85);
         font: 600 12px ui-monospace, monospace !important;
@@ -263,9 +293,14 @@
       <div id="tabs"></div>
       <div id="data" class="hidden">
         <div class="data-inner">
-          <h2>Matsyalok — ecosystem data</h2>
+          <h2>Matsyalok · ecosystem data</h2>
           <div id="charts"></div>
           <h3>Modes &amp; live tuning</h3>
+          <div class="tune-warn">
+            <b>⚠ Live, unclamped values.</b> These dials are deliberately wide open.
+            Push them too far and the populations can collapse or explode. That's
+            part of the fun, but if it all dies off, hit <b>Respawn</b> to start fresh.
+          </div>
           <div id="controls"></div>
           <button id="export">Export CSV ⤓</button>
         </div>
@@ -276,26 +311,31 @@
           <h1>Matsyalok</h1>
           <div class="sub">मत्स्यलोक · the realm of fish</div>
           <p>
-            Three fish share one sea — a silvery <b>sardine</b> shoal, the quick green
-            <b>mackerel</b> that work it, and a brown <b>grouper</b> that lurks and darts.
-            Nothing is scripted: each fish only <b>schools</b>, <b>flees</b>, and
-            <b>chases</b> by size, and who-eats-whom <b>emerges</b> — bait-balls, ambushes,
-            booms and crashes.
+            This is my small simulation of the ocean, full of <b>matsya</b> (fish).
+            Have a look: they gather into <b>bait-balls</b>, scatter, and hunt one
+            another, and none of it is scripted. It all falls out of a few simple
+            rules about size and sight.
           </p>
           <p>
-            In the <b>Data</b> tab, turn off <b>Biting</b> and <b>Hunger</b> and the fish
-            stop eating — they just push the shoal around. Same engine, a herding game.
+            Three kinds share the water: a silvery <b>sardine</b> shoal grazing the
+            red drift of <b>krill</b>, the quick green <b>mackerel</b> that work the
+            shoal, and a brown <b>grouper</b> that lurks and darts. You can be any of
+            them too. Just <b>click</b> a fish to take the wheel.
           </p>
           <p>
-            <b>Click</b> any fish to possess it · <b>WASD</b> / mouse to swim ·
+            <b>Click</b> a fish to possess it · <b>WASD</b> / mouse to swim ·
             <b>Space</b> to dart or lunge · <b>C</b> control scheme · <b>F</b> follow ·
             <b>P</b> pause · <b>Esc</b> release.
           </p>
           <p>
-            <b>Data</b> tab: live population &amp; resource charts, tuning sliders, mode
-            toggles, and CSV export.
+            The <b>Data</b> tab has live charts and dials if you'd like to tinker.
+            Turn off Biting and Hunger and the same fish just herd the shoal instead.
           </p>
           <div class="go">click anywhere to dive in</div>
+          <div class="credit">
+            Made with ❤️ by
+            <a href="https://dhawal-pandya.github.io/" target="_blank" rel="noopener">Dhawal Pandya</a>
+          </div>
         </div>
       </div>
     </div>

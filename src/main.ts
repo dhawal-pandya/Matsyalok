@@ -6,6 +6,7 @@ import { clamp } from "./sim/math";
 import {
   populateReef,
   reefResource,
+  reefDefaults,
   SP_MACKEREL,
   SP_GROUPER,
 } from "./scenarios/reef";
@@ -15,7 +16,7 @@ import { PlayerController } from "./input/controller";
 import { DataRecorder } from "./data/recorder";
 import { downloadCSV } from "./data/export";
 import { Charts } from "./ui/charts";
-import { buildControls, buildToggles } from "./ui/controls";
+import { buildControls, buildCounts, buildToggles } from "./ui/controls";
 import { Tabs } from "./ui/tabs";
 
 /** Entry point: fixed-timestep accumulator loop (A1) wiring sim → render. One shared
@@ -40,6 +41,10 @@ const camera = new Camera();
 const grid = new Grid(CAPACITY, CELL_SIZE);
 const controller = new PlayerController(canvas, () => world, camera);
 const settings = { biting: true, hunger: true };
+// Per-fish starting counts (editable in the Data tab; applied on Respawn).
+const counts: Record<string, number> = Object.fromEntries(
+  reefDefaults.map((s) => [s.id, s.count]),
+);
 
 let world: World;
 let resource: ResourceField;
@@ -128,7 +133,7 @@ function respawn(): void {
   const vh = window.innerHeight;
   world = new World(vw, vh, CAPACITY, seed++);
   resource.resize(vw, vh);
-  populateReef(world, { scale: spawnScale() });
+  populateReef(world, { scale: spawnScale(), counts });
   applySettings();
   recorder.clear();
   lastKills = 0;
@@ -145,6 +150,7 @@ function initUI(): void {
   const controlsEl = document.getElementById("controls") as HTMLElement;
   buildToggles(controlsEl, settings, () => world && applySettings());
   buildControls(controlsEl, resource);
+  buildCounts(controlsEl, counts, reefDefaults);
 
   tabs = new Tabs(
     document.getElementById("tabs") as HTMLElement,
@@ -182,6 +188,10 @@ function initUI(): void {
   // Welcome / help overlay (shown on load, reopened by the ? button; click to close).
   const overlay = document.getElementById("overlay") as HTMLElement;
   overlay.addEventListener("click", () => overlay.classList.add("hidden"));
+  // Let the credit link open without the overlay's click-to-close swallowing it.
+  overlay
+    .querySelector(".credit a")
+    ?.addEventListener("click", (e) => e.stopPropagation());
   (document.getElementById("help-btn") as HTMLElement).addEventListener(
     "click",
     () => overlay.classList.remove("hidden"),

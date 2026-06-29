@@ -11,6 +11,12 @@ every level.
 The single conceptual commitment: **predator–prey and shepherding are the same
 engine observed at different points on the size ladder.**
 
+**The live build is a three-fish reef** — a silvery **sardine** shoal, the quick
+**mackerel** that work it, and a brown **grouper** that lurks in the corners and
+darts at passing mackerel. Nothing is labelled predator or prey: who-eats-whom is
+emergent from `relate()` by size (D6/D17). The whole reef is dialled from a single
+data file, [`src/config/reef.json`](src/config/reef.json) (D19).
+
 ---
 
 ## Status
@@ -73,7 +79,8 @@ src/
 ├─ render/  # Canvas2D drawing — camera, oriented fish, frame compositor
 ├─ input/   # mouse/keyboard → player intents (Phase 5)
 ├─ data/    # time-series recorder + CSV export (Phase 6)
-├─ scenarios/, ui/   # modes + chrome (Phases 6–7)
+├─ config/   # reef.json — the single data dial for species + resource field (D19)
+├─ scenarios/, ui/   # modes (reef.ts) + chrome (Phases 6–7)
 └─ main.ts  # rAF loop, fixed-timestep accumulator, wiring
 ```
 

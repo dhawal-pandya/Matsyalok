@@ -82,6 +82,9 @@ These are settled. Changing one requires a deliberate edit to this file.
 | D14 | **Player control is switchable**: thrust+turn (arcade) *and* steer-toward-cursor | Different creatures/scenarios suit different schemes. |
 | D15 | **The sim core never imports from render/ or ui/** | Keeps it testable, headless-runnable, and lets the data recorder run independent of what's drawn. |
 | D16 | **Production-grade polish is a first-class goal**, not an afterthought | See §10. Budget real time for visuals, UX, and perf. |
+| D17 | **Species are presented as plain fish, never labelled "predator"/"prey"** | The product shows *different fish* (sardine, mackerel, grouper); who-eats-whom stays implicit and emergent from `relate()` (reinforces D6). Neutral language in UI, help, charts, HUD. |
+| D18 | **A sit-and-wait ambush brain** joins reflex/strategy as a third brain | The grouper lurks at a cheap idle (low `basalMult`), stalks big game it senses, commits a long **leap/dart**, prowls to new water when hungry, and returns to a home anchor. It's the "wait" counterpart to the roaming pack (D8) and the lever that holds the mid tier down. |
+| D19 | **The reef is data-driven via `src/config/reef.json`** | One JSON is the single dial for every species (size/senses/speed/energy/breeding/colour/count) and the resource field. Scenario code only spawns from it; the app and the headless balance harness read the same file (serves A6). |
 
 ---
 
@@ -157,8 +160,9 @@ matsyalok/
 │  │  ├─ perception.ts      # vision cone + lateral-line; blind-spot logic
 │  │  ├─ steering.ts        # boid forces: separation/alignment/cohesion/flee/seek
 │  │  ├─ brains/
-│  │  │  ├─ reflex.ts       # reactive: school + flee + chase + dart  (krill, fish)
-│  │  │  ├─ strategy.ts     # apex: pack coordination, target select, ambush, abilities
+│  │  │  ├─ reflex.ts       # reactive: school + flee + chase + dart  (sardine)
+│  │  │  ├─ strategy.ts     # roaming pack: spread, target select, lead-pursue, lunge (mackerel)
+│  │  │  ├─ ambush.ts       # sit-and-wait: lurk → stalk → long dart → return home (grouper, D18)
 │  │  │  └─ player.ts       # reads input → steering + ability
 │  │  ├─ abilities.ts       # ability defs, cooldowns, pulse effects
 │  │  ├─ resource.ts        # regrowing food field (sunlight/grass)
@@ -172,9 +176,11 @@ matsyalok/
 │  ├─ data/
 │  │  ├─ recorder.ts        # ring-buffer time series, sampling cadence
 │  │  └─ export.ts          # CSV download
+│  ├─ config/
+│  │  └─ reef.json          # the single dial: species + resource field (D19)
 │  ├─ scenarios/
 │  │  ├─ registry.ts        # the mode switch
-│  │  ├─ predatorPrey.ts
+│  │  ├─ reef.ts            # spawns the three-fish reef from config/reef.json
 │  │  └─ shepherd.ts        # sheep + dogs + barn zone + "all in barn" win
 │  ├─ ui/
 │  │  ├─ tabs.ts            # Sim ⇄ Data
@@ -242,8 +248,9 @@ cooldown-gated pulses; AI fires them by policy, the player by keypress:
 
 | Ability | Effect | Typical owner |
 | --- | --- | --- |
-| `dart` | short burst of speed/force (evasion) | krill, fish |
-| `lunge` | speed/force burst toward a target | orca, tuna |
+| `dart` | short burst of speed/force (evasion) | krill, sardine |
+| `lunge` | speed/force burst toward a target | mackerel, orca, tuna |
+| `leap` | long, explosive dart (speed×duration) to run down big game | grouper (ambush, D18) |
 | `bark` | temporary boost to flee-radius + repulsion on nearby crowd | dog |
 | `bubble-net` | emit a ring of repulsion that compresses a shoal | orca |
 
@@ -281,6 +288,20 @@ into the same loop. Predator-prey and shepherding are scenarios over one shared
 world; the orca-scatters-a-shoal behaviour and the dog-herds-sheep behaviour are
 the same systems at different size points.
 
+**Current build — the reef (D17/D19).** The live scenario is a three-fish reef,
+spawned from `config/reef.json` and presented as *just fish* (no predator/prey
+labels); the trophic chain is emergent (`relate()` by size):
+- **sardine** — a tiny silvery shoal that grazes the bloom and breeds fast;
+- **mackerel** — small, quick; schools (strategy brain) and works the shoal it
+  outsizes;
+- **grouper** — the brown giant; sit-and-wait ambush brain (D18) that lurks in the
+  corners, stalks mackerel it senses, and runs them down with a long dart. It is
+  the one check on the mid tier — without it the mid tier just keeps breeding.
+On small / touch screens the whole reef is spawned thinner (a count `scale`), for
+density and framerate. Balance is dialled live in the Data tab and validated
+headlessly by bundling a script that steps the sim and prints per-species counts
+(§ "Verifying" in docs/USAGE.md).
+
 ### 7.10 Rendering — oriented fish (production polish)
 - Each creature drawn as an **oriented shape** (teardrop body + tail) pointed
   along its heading, scaled by size, coloured/styled by species — minimal but
@@ -288,6 +309,11 @@ the same systems at different size points.
 - Polish targets: smooth motion, subtle tail/body animation (sine over heading),
   size-appropriate detail, readable species silhouettes, depth/parallax cues,
   pleasing water/field background, particle touches (bubbles, dust on a kill).
+- **Tail beat** is a phase *accumulated each tick* from the fish's speed (in
+  `step`), not derived from absolute time — so it stays smooth as speed fluctuates.
+- **Hunger gauge:** the tail fin and eyes read **red when starving** (energy near
+  zero, about to die) and shift through to **green as the fish fills toward its
+  reproductive split** — an at-a-glance read on every fish's state.
 - Camera pan/zoom; follow-possessed mode.
 
 ### 7.11 Data & instrumentation

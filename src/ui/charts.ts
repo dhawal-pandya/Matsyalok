@@ -55,9 +55,9 @@ export class Charts {
       { label: "mackerel", stroke: COL.mackerel, width: 2 },
       { label: "grouper", stroke: COL.grouper, width: 2 },
     ]);
-    this.eco = make(container, "resource %", width, [
+    this.eco = make(container, "krill %", width, [
       {},
-      { label: "resource %", stroke: COL.resource, width: 2 },
+      { label: "krill %", stroke: COL.resource, width: 2 },
     ]);
   }
 
