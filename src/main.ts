@@ -4,10 +4,11 @@ import { ResourceField } from "./sim/resource";
 import { step } from "./sim/step";
 import { clamp } from "./sim/math";
 import {
-  populatePredatorPrey,
-  SP_HUNTER,
-  SP_WHALE,
-} from "./scenarios/predatorPrey";
+  populateReef,
+  reefResource,
+  SP_MACKEREL,
+  SP_GROUPER,
+} from "./scenarios/reef";
 import { Renderer } from "./render/canvas";
 import { Camera } from "./render/camera";
 import { PlayerController } from "./input/controller";
@@ -23,11 +24,11 @@ import { Tabs } from "./ui/tabs";
 const DT = 1 / 60;
 const MAX_FRAME = 0.25;
 const MAX_STEPS = 8;
-const CAPACITY = 8192;
+const CAPACITY = 16384; // headroom for a ~5k shoal plus breeding
 const CELL_SIZE = 50;
-const RES_CELL = 32;
-const RES_MAX = 14;
-const RES_REGROW = 4.5; // master balance dial (D9)
+const RES_CELL = reefResource.cell;
+const RES_MAX = reefResource.max;
+const RES_REGROW = reefResource.regrow; // master balance dial (D9), set in reef.json
 const SAMPLE_SEC = 0.5; // data sampling cadence (A7)
 const FOLLOW_ZOOM = 1.7;
 
@@ -46,16 +47,16 @@ let seed = 7;
 
 const recorder = new DataRecorder([
   "t",
-  "prey",
-  "hunter",
-  "whale",
+  "sardine",
+  "mackerel",
+  "grouper",
   "resource",
-  "preyEnergy",
-  "hunterEnergy",
+  "sardineEnergy",
+  "mackerelEnergy",
   "killsPerSec",
   "birthsPerSec",
 ]);
-let charts: Charts;
+let charts: Charts | undefined;
 let tabs: Tabs;
 let paused = false;
 let chartsDirty = false;
@@ -64,7 +65,11 @@ let lastBirths = 0;
 let lastSampleT = 0;
 
 function chartWidth(): number {
-  return Math.min(720, window.innerWidth - 60);
+  // Measure the real container when it's laid out (the data panel is visible);
+  // fall back to a window estimate while it's still hidden.
+  const el = document.getElementById("charts");
+  const w = el?.clientWidth ?? 0;
+  return Math.min(720, w > 0 ? w : window.innerWidth - 40);
 }
 
 function applySettings(): void {
@@ -73,21 +78,21 @@ function applySettings(): void {
 }
 
 function sample(): void {
-  let prey = 0;
-  let hunter = 0;
-  let whale = 0;
-  let preyE = 0;
-  let hunterE = 0;
+  let sardine = 0;
+  let mackerel = 0;
+  let grouper = 0;
+  let sardineE = 0;
+  let mackerelE = 0;
   for (let i = 0; i < world.count; i++) {
     const s = world.species[i];
-    if (s === SP_HUNTER) {
-      hunter++;
-      hunterE += world.energy[i];
-    } else if (s === SP_WHALE) {
-      whale++;
+    if (s === SP_MACKEREL) {
+      mackerel++;
+      mackerelE += world.energy[i];
+    } else if (s === SP_GROUPER) {
+      grouper++;
     } else {
-      prey++;
-      preyE += world.energy[i];
+      sardine++;
+      sardineE += world.energy[i];
     }
   }
   const resPct =
@@ -95,12 +100,12 @@ function sample(): void {
   const span = world.time - lastSampleT || 1;
   recorder.push([
     world.time,
-    prey,
-    hunter,
-    whale,
+    sardine,
+    mackerel,
+    grouper,
     resPct,
-    prey ? preyE / prey : 0,
-    hunter ? hunterE / hunter : 0,
+    sardine ? sardineE / sardine : 0,
+    mackerel ? mackerelE / mackerel : 0,
     (world.kills - lastKills) / span,
     (world.births - lastBirths) / span,
   ]);
@@ -110,12 +115,20 @@ function sample(): void {
   chartsDirty = true;
 }
 
+/** Thin the reef on small / touch screens — fewer fish read better and run
+ *  smoother on a phone, where the world is a fraction of a desktop's area. */
+function spawnScale(): number {
+  const coarse = window.matchMedia?.("(pointer: coarse)").matches ?? false;
+  const small = Math.min(window.innerWidth, window.innerHeight) < 680;
+  return coarse || small ? 0.35 : 1;
+}
+
 function respawn(): void {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   world = new World(vw, vh, CAPACITY, seed++);
   resource.resize(vw, vh);
-  populatePredatorPrey(world);
+  populateReef(world, { scale: spawnScale() });
   applySettings();
   recorder.clear();
   lastKills = 0;
@@ -133,18 +146,25 @@ function initUI(): void {
   buildToggles(controlsEl, settings, () => world && applySettings());
   buildControls(controlsEl, resource);
 
-  charts = new Charts(
-    document.getElementById("charts") as HTMLElement,
-    chartWidth(),
-  );
   tabs = new Tabs(
     document.getElementById("tabs") as HTMLElement,
     document.getElementById("data") as HTMLElement,
     (tab) => {
-      if (tab === "data") {
+      // The floating help button overlaps the data panel's controls — hide it there.
+      const help = document.getElementById("help-btn");
+      if (help) help.style.display = tab === "data" ? "none" : "";
+      if (tab !== "data") return;
+      // Build the charts lazily, on first reveal: uPlot can only measure its
+      // layout once the panel is actually visible (not display:none).
+      if (!charts) {
+        charts = new Charts(
+          document.getElementById("charts") as HTMLElement,
+          chartWidth(),
+        );
+      } else {
         charts.resize(chartWidth());
-        charts.update(recorder);
       }
+      charts.update(recorder);
     },
   );
 
@@ -194,21 +214,21 @@ function modeName(): string {
 }
 
 function updateHud(): void {
-  let prey = 0;
-  let hunter = 0;
-  let whale = 0;
+  let sardine = 0;
+  let mackerel = 0;
+  let grouper = 0;
   for (let i = 0; i < world.count; i++) {
     const s = world.species[i];
-    if (s === SP_HUNTER) hunter++;
-    else if (s === SP_WHALE) whale++;
-    else prey++;
+    if (s === SP_MACKEREL) mackerel++;
+    else if (s === SP_GROUPER) grouper++;
+    else sardine++;
   }
   const res = Math.round(
     (resource.totalBiomass() / (resource.amount.length * resource.max)) * 100,
   );
   hud.innerHTML =
-    `${modeName()} · ${prey} prey · ${hunter} hunters` +
-    (whale > 0 ? ` · ${whale} whales` : "") +
+    `${modeName()} · ${sardine} sardine · ${mackerel} mackerel` +
+    (grouper > 0 ? ` · ${grouper} grouper` : "") +
     ` · ${res}% · ${fps} fps`;
 }
 
@@ -260,7 +280,7 @@ function frame(now: number): void {
     updateCamera();
     const hovered = world.possessed < 0 ? controller.hovered(world) : -1;
     renderer.draw(world, camera, resource, world.possessed, hovered, dt);
-  } else if (chartsDirty) {
+  } else if (chartsDirty && charts) {
     charts.update(recorder);
     chartsDirty = false;
   }

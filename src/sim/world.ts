@@ -2,9 +2,10 @@ import { Rng } from "./rng";
 import { TAU } from "./math";
 
 /** Visual archetype for a species (read only by render/fish.ts). Drives body
- *  saturation and markings: prey read muted, hunters read bright + striped,
- *  the whale sits calm in between. */
-export const FishStyle = { MUTED: 0, VIVID: 1, CALM: 2 } as const;
+ *  saturation, lightness and markings. SILVER reads pale silvery-white (the
+ *  sardine), VIVID is bright + striped (the mackerel), EARTH is a drab brown-grey
+ *  (the grouper); MUTED/CALM are kept for any future fish. */
+export const FishStyle = { MUTED: 0, VIVID: 1, CALM: 2, SILVER: 3, EARTH: 4 } as const;
 
 /** The shared bounded 2D world (A2). Agents are stored struct-of-arrays (D5/§6):
  *  one typed array per field, indexed by agent id — scales to thousands, no GC churn. */
@@ -61,7 +62,9 @@ export class World {
   /** Base hue (0..360); per-creature jitter added. */
   readonly hue: Float32Array;
   readonly wanderAngle: Float32Array;
-  /** Animation phase offset so tails don't beat in lockstep. */
+  /** Tail-beat phase in cycles [0,1), advanced each tick by step() from the fish's
+   *  speed. Accumulated (not derived from absolute time) so the beat stays smooth
+   *  even as speed fluctuates; a random start desyncs the school. */
   readonly phase: Float32Array;
 
   // --- Ecology (§7.7) -------------------------------------------------------
@@ -70,7 +73,13 @@ export class World {
   readonly grazes: Uint8Array;
   /** Visual archetype (FishStyle) — render-only; drives colour/markings. */
   readonly style: Uint8Array;
-  /** Energy needed to reproduce — low for r-strategist prey, high for predators. */
+  /** Per-unit-size basal burn multiplier. ~1 for active swimmers; tiny for a
+   *  sit-and-wait ambusher, so it can lurk a long while between strikes. */
+  readonly basalMult: Float32Array;
+  /** Anchor a sit-and-wait fish returns to after a strike (ambush brain only). */
+  readonly homeX: Float32Array;
+  readonly homeY: Float32Array;
+  /** Energy needed to reproduce — low for the fast-breeding shoal, high for the giants. */
   readonly reproThreshold: Float32Array;
   /** Seconds until this agent may reproduce again. */
   readonly reproCooldown: Float32Array;
@@ -115,6 +124,9 @@ export class World {
     this.energy = new Float32Array(capacity);
     this.grazes = new Uint8Array(capacity);
     this.style = new Uint8Array(capacity);
+    this.basalMult = new Float32Array(capacity);
+    this.homeX = new Float32Array(capacity);
+    this.homeY = new Float32Array(capacity);
     this.reproThreshold = new Float32Array(capacity);
     this.reproCooldown = new Float32Array(capacity);
     this.feedCooldown = new Float32Array(capacity);
@@ -144,6 +156,7 @@ export class World {
     energy: number;
     grazes: boolean;
     style?: number;
+    basalMult?: number;
     reproThreshold: number;
     brainKind: number;
     hunts: boolean;
@@ -168,10 +181,13 @@ export class World {
     this.viewRadius[i] = Math.max(spec.visionRange, spec.lateralRange);
     this.hue[i] = spec.hue;
     this.wanderAngle[i] = this.rng.range(0, TAU);
-    this.phase[i] = this.rng.range(0, TAU);
+    this.phase[i] = this.rng.range(0, 1);
     this.energy[i] = spec.energy;
     this.grazes[i] = spec.grazes ? 1 : 0;
     this.style[i] = spec.style ?? FishStyle.MUTED;
+    this.basalMult[i] = spec.basalMult ?? 1;
+    this.homeX[i] = spec.x;
+    this.homeY[i] = spec.y;
     this.reproThreshold[i] = spec.reproThreshold;
     this.reproCooldown[i] = 0;
     this.feedCooldown[i] = 0;
@@ -204,10 +220,13 @@ export class World {
     this.viewRadius[i] = this.viewRadius[parent];
     this.hue[i] = this.hue[parent];
     this.wanderAngle[i] = this.rng.range(0, TAU);
-    this.phase[i] = this.rng.range(0, TAU);
+    this.phase[i] = this.rng.range(0, 1);
     this.energy[i] = energy;
     this.grazes[i] = this.grazes[parent];
     this.style[i] = this.style[parent];
+    this.basalMult[i] = this.basalMult[parent];
+    this.homeX[i] = x; // a child anchors where it is born
+    this.homeY[i] = y;
     this.reproThreshold[i] = this.reproThreshold[parent];
     this.reproCooldown[i] = 0;
     this.feedCooldown[i] = 0;
@@ -258,6 +277,9 @@ export class World {
     this.energy[dst] = this.energy[src];
     this.grazes[dst] = this.grazes[src];
     this.style[dst] = this.style[src];
+    this.basalMult[dst] = this.basalMult[src];
+    this.homeX[dst] = this.homeX[src];
+    this.homeY[dst] = this.homeY[src];
     this.reproThreshold[dst] = this.reproThreshold[src];
     this.reproCooldown[dst] = this.reproCooldown[src];
     this.feedCooldown[dst] = this.feedCooldown[src];

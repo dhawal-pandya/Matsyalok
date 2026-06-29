@@ -4,19 +4,17 @@ import { Rel, relate } from "../relate";
 import { perceivedDir } from "../perception";
 import { speedMult, tryFire } from "../abilities";
 import { wander } from "../steering";
-import { Ecology } from "../lifecycle";
 
-/** Strategy brain (§7.5, §7.8) — apex pack hunting. Hunters spread apart (so the
- *  shoal is pressured from several sides, not dogpiled), pick the nearest perceived
- *  prey, pursue with lead, and lunge when close. A whale (a THREAT by size) is
- *  avoided when alone but mobbed when enough fellow hunters are near — the same
- *  encircle family aimed at a giant. */
+/** Strategy brain (§7.5, §7.8) — the mackerel's pack hunting. They spread apart (so
+ *  the shoal is pressured from several sides, not dogpiled), pick the nearest
+ *  perceived FOOD, pursue with lead, and lunge when close. Anything that outsizes
+ *  them (a THREAT — the grouper) they steer away from. */
 
-const W_SPREAD = 1.6; // push off other hunters → spread around the shoal
+const W_SPREAD = 1.6; // push off fellow schoolers → spread around the shoal
 const W_PURSUE = 1.9;
-const W_AVOID = 1.5; // back off a whale when not in a pack
+const W_AVOID = 2.2; // veer away from the giant
 const W_WANDER = 0.6;
-const LUNGE_RANGE = 6; // × predator size: close enough to commit a lunge
+const LUNGE_RANGE = 9; // × own size: commit a lunge as the shoal bolts
 
 const _wander: [number, number] = [0, 0];
 
@@ -45,9 +43,8 @@ export function strategyBrain(
     sepY = 0;
   let target = -1;
   let targetDist = Infinity;
-  let whale = -1;
-  let whaleDist = Infinity;
-  let pack = 1; // self, plus fellow hunters nearby (mob readiness)
+  let threat = -1;
+  let threatDist = Infinity;
 
   for (let q = 0; q < count; q++) {
     const j = neighbors[q];
@@ -66,16 +63,15 @@ export function strategyBrain(
         target = j;
       }
     } else if (rel === Rel.SCHOOLMATE) {
-      if (d < Ecology.MOB_RADIUS) pack++;
       if (d < spreadR) {
         const w = (spreadR - d) / spreadR / d;
         sepX += dx * w;
         sepY += dy * w;
       }
     } else if (rel === Rel.THREAT) {
-      if (d < whaleDist) {
-        whaleDist = d;
-        whale = j;
+      if (d < threatDist) {
+        threatDist = d;
+        threat = j;
       }
     }
   }
@@ -89,17 +85,12 @@ export function strategyBrain(
     fy += ((sepY / m) * max - vy) * W_SPREAD;
   }
 
-  // A whale nearby: mob it with the pack, or back off if outnumbered.
-  if (whale >= 0) {
-    if (pack >= Ecology.MOB_THRESHOLD) {
-      target = whale; // commit the pack to the giant
-      targetDist = whaleDist;
-    } else {
-      const ax = (x - world.x[whale]) / (whaleDist || 1);
-      const ay = (y - world.y[whale]) / (whaleDist || 1);
-      fx += (ax * max - vx) * W_AVOID;
-      fy += (ay * max - vy) * W_AVOID;
-    }
+  // Veer away from the giant — it outsizes them and will leap.
+  if (threat >= 0) {
+    const ax = (x - world.x[threat]) / (threatDist || 1);
+    const ay = (y - world.y[threat]) / (threatDist || 1);
+    fx += (ax * max - vx) * W_AVOID;
+    fy += (ay * max - vy) * W_AVOID;
   }
 
   if (target >= 0) {

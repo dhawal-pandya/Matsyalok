@@ -237,6 +237,23 @@
       .uplot {
         margin: 0 auto;
       }
+
+      /* Mobile: tighter gutters, give the charts the full width, keep the
+         live legend from crowding the axis labels. */
+      @media (max-width: 560px) {
+        #data {
+          padding: 52px 12px 32px;
+        }
+        .data-inner h2 {
+          font-size: 14px;
+        }
+        #charts {
+          gap: 26px;
+        }
+        .u-legend {
+          margin-top: 6px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -259,12 +276,14 @@
           <h1>Matsyalok</h1>
           <div class="sub">मत्स्यलोक · the realm of fish</div>
           <p>
-            A living shoal and the bigger fish that hunt it. Nothing is scripted — each
-            creature only <b>schools</b>, <b>flees</b>, and <b>chases</b> by size, and the
-            collective behaviour <b>emerges</b>: bait-balls, ambushes, booms and crashes.
+            Three fish share one sea — a silvery <b>sardine</b> shoal, the quick green
+            <b>mackerel</b> that work it, and a brown <b>grouper</b> that lurks and darts.
+            Nothing is scripted: each fish only <b>schools</b>, <b>flees</b>, and
+            <b>chases</b> by size, and who-eats-whom <b>emerges</b> — bait-balls, ambushes,
+            booms and crashes.
           </p>
           <p>
-            In the <b>Data</b> tab, turn off <b>Biting</b> and <b>Hunger</b> and the hunters
+            In the <b>Data</b> tab, turn off <b>Biting</b> and <b>Hunger</b> and the fish
             stop eating — they just push the shoal around. Same engine, a herding game.
           </p>
           <p>

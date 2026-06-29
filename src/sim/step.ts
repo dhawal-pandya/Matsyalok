@@ -3,6 +3,7 @@ import type { Grid } from "./grid";
 import type { ResourceField } from "./resource";
 import { reflexBrain } from "./brains/reflex";
 import { strategyBrain } from "./brains/strategy";
+import { ambushBrain } from "./brains/ambush";
 import { playerBrain, type PlayerIntent } from "./brains/player";
 import { BrainKind } from "./brains/kinds";
 import { boundaryForce, integrate } from "./body";
@@ -39,15 +40,21 @@ export function step(
     tickAbility(world, i, dt);
     if (i === world.possessed && intent) playerBrain(world, i, intent, _brain);
     else if (world.brainKind[i] === BrainKind.HUNTER) strategyBrain(world, grid, i, _neighbors, dt, _brain);
+    else if (world.brainKind[i] === BrainKind.AMBUSH) ambushBrain(world, grid, i, _neighbors, dt, _brain);
     else reflexBrain(world, grid, i, _neighbors, dt, _brain);
     boundaryForce(world, i, _bounds);
     const ms = world.maxSpeed[i] * speedMult(world, i);
     const mf = world.maxForce[i] * forceMult(world, i);
     integrate(world, i, _brain[0] + _bounds[0] * W_BOUNDS, _brain[1] + _bounds[1] * W_BOUNDS, ms, mf, dt);
+    // Advance the tail-beat phase from the new speed — faster swim, faster beat —
+    // accumulated so it stays continuous (the renderer just reads it).
+    const sp = Math.hypot(world.vx[i], world.vy[i]);
+    const beat = 1.1 + (sp / world.maxSpeed[i]) * 1.9;
+    world.phase[i] = (world.phase[i] + beat * dt) % 1;
   }
 
-  // Biting: each hunter catches the nearest in-range prey (digestion-limited), or
-  // tears at a whale if its pack is mobbing one. Off → chase but never consume (§2).
+  // Biting: each hunter catches the nearest in-range FOOD (digestion-limited).
+  // Off → chase but never consume (§2).
   if (world.bitingEnabled) {
     for (let i = 0; i < n; i++) {
       if (world.dead[i] || !world.hunts[i]) continue;
@@ -55,7 +62,7 @@ export function step(
         world.feedCooldown[i] -= dt;
         continue;
       }
-      if (!eatNearestFood(world, grid, i)) mobBiteWhale(world, grid, i);
+      eatNearestFood(world, grid, i);
     }
   }
 
@@ -67,7 +74,10 @@ export function step(
         // Intake scales with body size: a big filter-feeder (the whale) sweeps a
         // wide swathe of bloom, enough to outpace its larger metabolism instead of
         // starving. Small grazers just take their own cell.
-        const reach = world.size[i] / Ecology.GRAZE_SIZE_REF;
+        const reach = Math.min(
+          Ecology.GRAZE_REACH_MAX,
+          world.size[i] / Ecology.GRAZE_SIZE_REF,
+        );
         const want = Ecology.GRAZE_RATE * reach * dt;
         const taken = resource.graze(world.x[i], world.y[i], want, world.size[i]);
         world.energy[i] += taken * Ecology.GRAZE_GAIN;
@@ -117,46 +127,4 @@ function eatNearestFood(world: World, grid: Grid, i: number): boolean {
   world.kills++;
   world.killFx.push(world.x[best], world.y[best]);
   return true;
-}
-
-/** A hunter tears at the nearest whale (a THREAT by size) — but only if enough
- *  fellow hunters are ganged up around it. A lone hunter can't hurt the giant. */
-function mobBiteWhale(world: World, grid: Grid, i: number): void {
-  const searchR = world.size[i] * 4 + 20;
-  let whale = -1;
-  let bestD2 = Infinity;
-  let count = grid.query(world.x[i], world.y[i], searchR, _neighbors);
-  for (let q = 0; q < count; q++) {
-    const j = _neighbors[q];
-    if (j === i || world.dead[j]) continue;
-    if (relate(world, i, j) !== Rel.THREAT) continue;
-    const dx = world.x[i] - world.x[j];
-    const dy = world.y[i] - world.y[j];
-    const d2 = dx * dx + dy * dy;
-    const range = Ecology.EAT_RANGE * (world.size[i] + world.size[j]);
-    if (d2 > range * range) continue;
-    if (d2 < bestD2) {
-      bestD2 = d2;
-      whale = j;
-    }
-  }
-  if (whale < 0) return;
-
-  // Count hunters ganged up around the whale.
-  let pack = 0;
-  count = grid.query(world.x[whale], world.y[whale], Ecology.MOB_RADIUS, _neighbors);
-  for (let q = 0; q < count; q++) {
-    const k = _neighbors[q];
-    if (!world.dead[k] && world.hunts[k]) pack++;
-  }
-  if (pack < Ecology.MOB_THRESHOLD) return;
-
-  world.energy[whale] -= Ecology.WHALE_DMG;
-  world.energy[i] += Ecology.WHALE_GAIN;
-  world.feedCooldown[i] = Ecology.FEED_COOLDOWN;
-  if (world.energy[whale] <= 0) {
-    world.dead[whale] = 1;
-    world.kills++;
-    world.killFx.push(world.x[whale], world.y[whale], world.x[whale], world.y[whale]);
-  }
 }

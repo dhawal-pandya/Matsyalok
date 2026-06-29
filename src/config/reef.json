@@ -1,0 +1,71 @@
+{
+  "_comment": "The reef, in data. Edit these to tune the world — reef.ts spawns straight from here and the headless balance harness reads the same file. Ranges are [min, max] (rolled per fish); scalars are fixed. style/brain/ability are names mapped in reef.ts. Species order defines the SP_* ids, so keep it stable.",
+  "resource": {
+    "cell": 32,
+    "max": 26,
+    "regrow": 10
+  },
+  "species": [
+    {
+      "id": "sardine",
+      "count": 2000,
+      "size": [3.0, 3.6],
+      "maxSpeed": [82, 100],
+      "maxForce": 240,
+      "vision": 64,
+      "fov": 300,
+      "lateral": 24,
+      "hue": 205,
+      "hueJitter": 8,
+      "energy": [14, 26],
+      "grazes": true,
+      "style": "silver",
+      "basalMult": 1,
+      "reproThreshold": 26,
+      "brain": "reflex",
+      "hunts": false,
+      "ability": "dart"
+    },
+    {
+      "id": "mackerel",
+      "count": 30,
+      "size": [5.2, 6.2],
+      "maxSpeed": [110, 124],
+      "maxForce": 150,
+      "vision": 165,
+      "fov": 180,
+      "lateral": 56,
+      "hue": 142,
+      "hueJitter": 8,
+      "energy": [80, 120],
+      "grazes": false,
+      "style": "vivid",
+      "basalMult": 0.6,
+      "reproThreshold": 145,
+      "brain": "hunter",
+      "hunts": true,
+      "ability": "lunge"
+    },
+    {
+      "id": "grouper",
+      "count": 2,
+      "spawnAt": "corners",
+      "size": [14, 18],
+      "maxSpeed": [44, 54],
+      "maxForce": 120,
+      "vision": 210,
+      "fov": 250,
+      "lateral": 64,
+      "hue": 28,
+      "hueJitter": 6,
+      "energy": 120,
+      "grazes": false,
+      "style": "earth",
+      "basalMult": 0.03,
+      "reproThreshold": 340,
+      "brain": "ambush",
+      "hunts": true,
+      "ability": "leap"
+    }
+  ]
+}

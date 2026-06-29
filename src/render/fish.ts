@@ -17,12 +17,15 @@ const SAT_LEVELS = 6; // quantised satiation buckets (keeps the cache bounded)
 const SAMPLES = 16; // points along the centreline
 const SUPERSAMPLE = Math.min(2, Math.max(1, Math.round(devicePixelRatio || 1)));
 
-// Per-style body shading: [saturation%, lightness offset]. Muted prey desaturate
-// toward grey; vivid hunters are loud; the whale sits calm.
-const STYLE_SAT: Record<number, number> = {
-  [FishStyle.MUTED]: 26,
-  [FishStyle.VIVID]: 82,
-  [FishStyle.CALM]: 50,
+// Per-style body shading: saturation% and a lightness offset. SILVER is pale and
+// near-grey (silvery sardine); VIVID is loud (mackerel); EARTH is a dark drab
+// brown-grey (grouper); MUTED/CALM sit in between.
+const STYLE: Record<number, { sat: number; dL: number }> = {
+  [FishStyle.MUTED]: { sat: 26, dL: 0 },
+  [FishStyle.VIVID]: { sat: 82, dL: 0 },
+  [FishStyle.CALM]: { sat: 50, dL: 0 },
+  [FishStyle.SILVER]: { sat: 12, dL: 18 },
+  [FishStyle.EARTH]: { sat: 22, dL: -6 },
 };
 
 interface Strip {
@@ -58,20 +61,19 @@ function buildStrip(size: number, hue: number, style: number, satiety: number): 
 
   // Body: hue identifies the species, saturation its archetype; bigger fish read
   // deeper/darker (a size-graded shade).
-  const sat = STYLE_SAT[style] ?? 50;
-  const L = Math.max(33, 58 - size * 0.55);
+  const cfg = STYLE[style] ?? { sat: 50, dL: 0 };
+  const sat = cfg.sat;
+  const L = Math.max(30, 58 - size * 0.55 + cfg.dL);
   const base = `hsl(${hue}, ${sat}%, ${L}%)`;
   const spine = `hsl(${hue}, ${Math.max(0, sat - 4)}%, ${L - 18}%)`;
   const edge = `hsl(${hue}, ${Math.max(0, sat - 10)}%, ${L - 24}%)`;
   const stripeC = `hsl(${hue}, ${Math.min(100, sat + 10)}%, ${Math.max(13, L - 30)}%)`;
 
-  // Satiation cue (kept subtle): the tail fin and eyes drift from the body hue
-  // toward a warm red as the fish fills toward its split.
-  const tailHue = hue + (16 - hue) * satiety;
-  const tailSat = sat + (62 - sat) * satiety;
-  const tailC = `hsl(${tailHue}, ${tailSat}%, ${L - 14 + satiety * 6}%)`;
-  const eyeHue = hue + (8 - hue) * satiety;
-  const eyeC = `hsl(${eyeHue}, ${45 + satiety * 48}%, ${13 + satiety * 33}%)`;
+  // Hunger gauge on the tail fin and eyes: red when starving (energy near zero —
+  // about to die), shifting through to green as the fish fills toward its split.
+  const gHue = 4 + satiety * 132; // 4 = red (empty) … 136 = green (about to breed)
+  const tailC = `hsl(${gHue}, ${58 + satiety * 26}%, ${L - 12 + satiety * 8}%)`;
+  const eyeC = `hsl(${gHue}, ${52 + satiety * 33}%, ${18 + satiety * 24}%)`;
   const xHead = len * 0.5;
 
   const cx = new Float32Array(SAMPLES);

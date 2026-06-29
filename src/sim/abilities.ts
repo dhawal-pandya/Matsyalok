@@ -4,7 +4,7 @@ import type { World } from "./world";
  *  keypress (player); while active it boosts the agent's speed/force — this is the
  *  burst that lets escape/attack exceed cruise speed. `bark`/`bubble-net` (shared
  *  repulsion pulses) slot in here later for the shepherd/orca. */
-export const Ability = { NONE: 0, DART: 1, LUNGE: 2 } as const;
+export const Ability = { NONE: 0, DART: 1, LUNGE: 2, LEAP: 3 } as const;
 export type Ability = (typeof Ability)[keyof typeof Ability];
 
 interface AbilityDef {
@@ -18,6 +18,9 @@ interface AbilityDef {
 const DEFS: Record<number, AbilityDef> = {
   [Ability.DART]: { speedMult: 2.3, forceMult: 2.2, duration: 0.45, cooldown: 1.5, energyCost: 2 },
   [Ability.LUNGE]: { speedMult: 1.9, forceMult: 1.8, duration: 0.6, cooldown: 2.2, energyCost: 5 },
+  // Ambush leap: explosive and far-reaching (speed × duration = a long dart), but
+  // slow to recharge — the sit-and-wait strike that runs down passing big game.
+  [Ability.LEAP]: { speedMult: 5.0, forceMult: 3.6, duration: 1.0, cooldown: 3.0, energyCost: 5 },
 };
 
 export function tickAbility(world: World, i: number, dt: number): void {

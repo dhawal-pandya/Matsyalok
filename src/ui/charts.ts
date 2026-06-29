@@ -1,4 +1,5 @@
 import uPlot from "uplot";
+import "uplot/dist/uPlot.min.css"; // anchors uPlot's absolutely-positioned layers
 import type { DataRecorder } from "../data/recorder";
 
 /** uPlot population/resource charts for the Data tab (§7.11). Reads recorder
@@ -6,9 +7,9 @@ import type { DataRecorder } from "../data/recorder";
 
 const HEIGHT = 200;
 const COL = {
-  prey: "#5fd0e6",
-  hunter: "#56c6a8",
-  whale: "#7aa6ff",
+  sardine: "#5fd0e6",
+  mackerel: "#56c6a8",
+  grouper: "#e07ac6",
   resource: "#69d49a",
 };
 
@@ -50,9 +51,9 @@ export class Charts {
   constructor(container: HTMLElement, width: number) {
     this.pop = make(container, "population", width, [
       {},
-      { label: "prey", stroke: COL.prey, width: 2 },
-      { label: "hunters", stroke: COL.hunter, width: 2 },
-      { label: "whales", stroke: COL.whale, width: 2 },
+      { label: "sardine", stroke: COL.sardine, width: 2 },
+      { label: "mackerel", stroke: COL.mackerel, width: 2 },
+      { label: "grouper", stroke: COL.grouper, width: 2 },
     ]);
     this.eco = make(container, "resource %", width, [
       {},
@@ -64,9 +65,9 @@ export class Charts {
     const t = rec.column("t");
     this.pop.setData([
       t,
-      rec.column("prey"),
-      rec.column("hunter"),
-      rec.column("whale"),
+      rec.column("sardine"),
+      rec.column("mackerel"),
+      rec.column("grouper"),
     ]);
     this.eco.setData([t, rec.column("resource")]);
     // Pin the live legend to the latest sample so values show without hovering.

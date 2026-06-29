@@ -161,9 +161,7 @@ export class Renderer {
           straight = true;
         }
       } else {
-        const speed = Math.hypot(world.vx[i], world.vy[i]);
-        const beatHz = 1.1 + (speed / world.maxSpeed[i]) * 1.9;
-        animFrac = (world.time * beatHz + world.phase[i] / (Math.PI * 2)) % 1;
+        animFrac = world.phase[i]; // smooth tail beat accumulated by step()
       }
 
       // Satiation: how full the fish is toward its split threshold, shown on the
